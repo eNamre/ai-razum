@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Текст без следов нейросети · Лаборатория ИИ-решений РАЗУМ</title>
+<meta name="description" content="Справочник лаборатории ИИ-решений РАЗУМ: что выдаёт машинный текст и как это вычистить. 6 тиков, 35 усилителей, промпт-корректор.">
+<meta property="og:title" content="Текст без следов нейросети">
+<meta property="og:description" content="Что выдаёт машинный текст и как это вычистить. Справочник лаборатории ИИ-решений РАЗУМ.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* РАЗУМ — фирменные цвета */
+    --bg:#F4F4F2;
+    --bg-2:#ECEBE7;
+    --card:#FFFFFF;
+    --ink:#2B2B2A;          /* графитовый */
+    --ink-soft:#3E4348;
+    --ink-mute:#5B6670;     /* фирменный серый */
+    --green:#218D56;        /* акцент тёмный */
+    --green-light:#40B979;  /* акцент светлый */
+    --green-bg:#E8F4ED;
+    --green-line:#C4E2D2;
+    --terra:#C66C35;        /* доп. цвет 1 */
+    --terra-light:#E5A360;
+    --terra-bg:#FAEDDF;
+    --terra-line:#EBD3BC;
+    --sand:#FADEB7;         /* доп. цвет 2 */
+    --line:#E2E1DC;
+    --line-soft:#ECEBE7;
+    --shadow:0 1px 2px rgba(43,43,42,.04),0 14px 34px -18px rgba(43,43,42,.20);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Montserrat',system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    background-image:
+      radial-gradient(1200px 600px at 80% -12%, rgba(64,185,121,.08), transparent 60%),
+      radial-gradient(900px 520px at -10% 10%, rgba(91,102,112,.06), transparent 55%);
+  }
+
+  /* ---------- progress bar ---------- */
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--green-light),var(--green));z-index:200;transition:width .12s linear}
+
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px}
+
+  /* ---------- topbar ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0 0;animation:fade .9s ease both}
+  .brand{display:flex;align-items:center;gap:13px;font-weight:600;letter-spacing:.01em}
+  .brand .mark{width:30px;height:auto;flex:0 0 auto;color:var(--ink);display:block}
+  .brand .mark svg{display:block;width:100%;height:auto}
+  .brand .bn{line-height:1.2;font-size:15px}
+  .brand small{display:block;font-weight:500;color:var(--ink-mute);font-size:11.5px;letter-spacing:.06em;text-transform:lowercase;margin-top:2px}
+  .topbar .tag{font-size:12px;color:var(--ink-mute);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:62px 0 46px;border-bottom:1px solid var(--line)}
+  .kicker{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);font-weight:700;animation:fade .9s .05s ease both}
+  .kicker::before{content:"";width:26px;height:2px;background:var(--green-light);border-radius:2px}
+  h1{font-weight:800;font-size:clamp(36px,6vw,62px);line-height:1.05;letter-spacing:-.02em;margin:20px 0 0;animation:rise 1s .1s cubic-bezier(.2,.7,.2,1) both}
+  h1 em{font-style:normal;color:var(--green)}
+  .lede{font-size:clamp(17.5px,2.3vw,20px);color:var(--ink-soft);max-width:60ch;margin-top:22px;font-weight:500;animation:rise 1s .22s cubic-bezier(.2,.7,.2,1) both}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;animation:fade 1s .4s ease both}
+  .pill{font-size:13px;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);padding:7px 14px;border-radius:100px;font-weight:500}
+  .pill b{color:var(--green);font-weight:700}
+
+  /* ---------- nav ---------- */
+  nav.toc{position:sticky;top:0;background:rgba(244,244,242,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:100;margin-top:0}
+  nav.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:12px;padding-bottom:12px;scrollbar-width:none}
+  nav.toc .wrap::-webkit-scrollbar{display:none}
+  nav.toc a{flex:0 0 auto;font-size:13px;color:var(--ink-mute);text-decoration:none;padding:7px 13px;border-radius:100px;white-space:nowrap;transition:.18s;font-weight:600}
+  nav.toc a:hover{color:var(--ink);background:var(--bg-2)}
+  nav.toc a.active{background:var(--ink);color:#fff}
+
+  /* ---------- sections ---------- */
+  section{padding:58px 0;border-bottom:1px solid var(--line-soft)}
+  .sec-num{font-size:13px;color:var(--green);letter-spacing:.1em;font-weight:700}
+  h2{font-weight:700;font-size:clamp(25px,3.6vw,37px);line-height:1.14;letter-spacing:-.02em;margin:6px 0 16px}
+  h2 + .sub{color:var(--ink-soft);max-width:62ch;font-size:17px;font-weight:500}
+  p{margin:0 0 16px;color:var(--ink-soft)}
+  p strong,li strong{color:var(--ink);font-weight:700}
+  .ink{color:var(--ink)}
+
+  /* ---------- tics (before/after) ---------- */
+  .tics{display:flex;flex-direction:column;gap:14px;margin-top:30px}
+  .tic{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .tic-head{display:flex;align-items:baseline;gap:14px;padding:18px 22px;cursor:pointer;user-select:none}
+  .tic-head .n{font-weight:800;color:var(--green);font-size:18px;flex:0 0 auto;width:22px}
+  .tic-head .t{font-weight:600;color:var(--ink);font-size:17px;flex:1}
+  .tic-head .chev{flex:0 0 auto;color:var(--ink-mute);transition:transform .3s ease;font-size:13px}
+  .tic.open .chev{transform:rotate(180deg)}
+  .tic-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .34s ease}
+  .tic.open .tic-body{grid-template-rows:1fr}
+  .tic-body > div{overflow:hidden}
+  .tic-inner{padding:0 22px 22px}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+  @media(max-width:620px){.ba{grid-template-columns:1fr}}
+  .ba .box{border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5}
+  .ba .bad{background:var(--terra-bg);border:1px solid var(--terra-line)}
+  .ba .good{background:var(--green-bg);border:1px solid var(--green-line)}
+  .ba .lbl{display:flex;align-items:center;gap:7px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:8px}
+  .ba .bad .lbl{color:var(--terra)}
+  .ba .good .lbl{color:var(--green)}
+  .ba .box span{color:var(--ink)}
+  .dot{width:7px;height:7px;border-radius:50%}
+  .bad .dot{background:var(--terra)}
+  .good .dot{background:var(--green)}
+
+  /* ---------- stopwords ---------- */
+  .stop{margin-top:26px;background:var(--bg-2);border:1px dashed var(--line);border-radius:var(--radius);padding:20px 22px}
+  .stop h4{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);margin-bottom:12px;font-weight:700}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:14px;background:var(--card);border:1px solid var(--line);padding:5px 12px;border-radius:100px;color:var(--ink-soft);font-weight:500}
+  .chip s{color:var(--terra);text-decoration-color:rgba(198,108,53,.55)}
+
+  /* ---------- accordion (35) ---------- */
+  .acc{margin-top:28px;display:flex;flex-direction:column;gap:10px}
+  .grp{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .grp-head{display:flex;align-items:center;gap:14px;padding:18px 22px;cursor:pointer;user-select:none}
+  .grp-head .gi{color:var(--green-light);font-size:20px;font-weight:800;flex:0 0 auto;width:30px}
+  .grp-head .gt{flex:1;font-weight:600;font-size:17.5px}
+  .grp-head .gc{font-size:13px;color:var(--ink-mute);flex:0 0 auto;font-weight:500}
+  .grp-head .chev{color:var(--ink-mute);transition:transform .3s;margin-left:8px}
+  .grp.open .chev{transform:rotate(180deg)}
+  .grp-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .34s ease}
+  .grp.open .grp-body{grid-template-rows:1fr}
+  .grp-body > div{overflow:hidden}
+  .grp ul{list-style:none;padding:4px 22px 20px}
+  .grp li{position:relative;padding:9px 0 9px 26px;border-top:1px solid var(--line-soft);color:var(--ink-soft);font-size:16px;font-weight:500}
+  .grp li:first-child{border-top:none}
+  .grp li::before{content:"";position:absolute;left:4px;top:17px;width:7px;height:7px;border:2px solid var(--green-light);border-radius:50%}
+
+  /* ---------- prompt block ---------- */
+  .promptcard{margin-top:28px;background:var(--ink);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .promptcard .ph{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.10)}
+  .promptcard .ph span{color:var(--green-light);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+  .copybtn{display:inline-flex;align-items:center;gap:7px;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.26);padding:7px 14px;border-radius:100px;font-family:'Montserrat',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:.18s}
+  .copybtn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.45)}
+  .copybtn.done{background:var(--green);border-color:var(--green);color:#fff}
+  .promptcard pre{margin:0;padding:22px 24px;color:#E8E8E6;font-family:'Montserrat',sans-serif;font-size:14.5px;line-height:1.68;white-space:pre-wrap;word-break:break-word;font-weight:400}
+  .promptcard pre b{color:#fff;font-weight:700}
+
+  /* ---------- phrase bank ---------- */
+  .bank{margin-top:28px;display:grid;gap:16px}
+  .bgrp{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+  .bgrp h4{font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:14px}
+  .phrase{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid var(--line-soft)}
+  .phrase:first-of-type{border-top:none}
+  .phrase p{margin:0;color:var(--ink);font-size:15.5px;flex:1;line-height:1.5;font-weight:500}
+  .mini{flex:0 0 auto;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--bg);cursor:pointer;display:grid;place-items:center;color:var(--ink-mute);transition:.18s}
+  .mini:hover{border-color:var(--green-light);color:var(--green);background:var(--card)}
+  .mini.done{background:var(--green);border-color:var(--green);color:#fff}
+  .mini svg{width:16px;height:16px}
+
+  /* ---------- avoid ---------- */
+  .avoid{margin-top:26px;display:grid;gap:12px}
+  .avoid .row{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--terra);border-radius:10px;padding:16px 18px}
+  .avoid .row .x{flex:0 0 auto;color:var(--terra);font-weight:800;font-size:18px;line-height:1.3}
+  .avoid .row p{margin:0;font-size:15.5px;font-weight:500}
+
+  /* ---------- links ---------- */
+  .links{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:620px){.links{grid-template-columns:1fr}}
+  .links a{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;text-decoration:none;color:var(--ink);transition:.2s;box-shadow:var(--shadow)}
+  .links a:hover{transform:translateY(-2px);border-color:var(--green-light)}
+  .links a .src{font-size:12px;color:var(--green);letter-spacing:.04em;font-weight:700;text-transform:uppercase}
+  .links a .ti{font-weight:700;margin:7px 0 5px;font-size:16.5px;line-height:1.3}
+  .links a .ds{font-size:14px;color:var(--ink-mute);line-height:1.45;font-weight:500}
+  .links a .go{font-size:13px;color:var(--green);margin-top:10px;display:inline-flex;align-items:center;gap:5px;font-weight:600}
+
+  /* ---------- footer ---------- */
+  footer{padding:56px 0 70px;text-align:center}
+  .cta{background:var(--ink);border-radius:var(--radius);padding:42px 30px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .cta::after{content:"";position:absolute;inset:0;background:radial-gradient(600px 280px at 82% -30%, rgba(64,185,121,.22), transparent 60%);pointer-events:none}
+  .cta .cmark{width:30px;height:auto;margin:0 auto 18px;color:#fff;position:relative}
+  .cta .cmark svg{display:block;width:100%;height:auto}
+  .cta h3{font-weight:700;color:#fff;font-size:clamp(21px,3.2vw,28px);line-height:1.2;margin-bottom:12px;position:relative}
+  .cta p{color:rgba(255,255,255,.80);max-width:50ch;margin:0 auto 8px;position:relative;font-weight:500}
+  .cta .sig{margin-top:22px;color:var(--green-light);font-size:14px;letter-spacing:.03em;font-weight:600;position:relative}
+  .foot-note{margin-top:26px;color:var(--ink-mute);font-size:13px;letter-spacing:.02em;font-weight:500}
+
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 7498.36 9155.2" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M571.69 7747.08l6350.92 0 575.75 1408.12 -7498.36 0 571.69 -1408.12zm3947.71 -7747.08l-1556.98 0 -2088.76 5108.86 1532.49 0 1340.02 -3276.97 1334.78 3276.97 1528.08 0 -2089.63 -5108.86z"/></svg>
+      </span>
+      <span class="bn">РАЗУМ · Лаборатория ИИ-решений<small>интеллигентный девелопмент</small></span>
+    </div>
+    <div class="tag">ИИ. Будущее сегодня</div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="kicker">Справочник по работе с текстом</span>
+    <h1>Текст без <em>следов</em> нейросети</h1>
+    <p class="lede">Почти каждый сегодня узнаёт текст, который писала модель. Причина простая: мы берём её первый вариант и не дорабатываем. Сама нейросеть тут ни при чём. Ниже — короткий разбор того, что выдаёт машинный текст, и набор приёмов, чтобы это вычистить.</p>
+    <div class="meta-row">
+      <span class="pill">⏱ Чтение <b>~7 минут</b></span>
+      <span class="pill"><b>6</b> тиков русского ИИ-текста</span>
+      <span class="pill"><b>35</b> усилителей для промпта</span>
+      <span class="pill">Готовый <b>промпт-корректор</b></span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#why">Почему видно</a>
+    <a href="#tics">6 тиков</a>
+    <a href="#boost">35 усилителей</a>
+    <a href="#corrector">Промпт-корректор</a>
+    <a href="#bank">Банк фраз</a>
+    <a href="#avoid">Что не работает</a>
+    <a href="#links">Что почитать</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- WHY -->
+  <section id="why">
+    <div class="sec-num">01</div>
+    <h2>Почему машинный текст видно за версту</h2>
+    <p class="sub">Языковая модель выбирает самое вероятное продолжение фразы. А самое вероятное обычно и есть самое затёртое: усреднённый текст из всего, что модель видела при обучении. Его мы и считываем как «нейросетевой».</p>
+    <p>Хорошая новость: вычищается это за пару проходов по конкретным признакам. Никакой магии и сервисов «обхода детекторов» не нужно. Сама модель не знает, что для вас «нормально». Поэтому дайте ей критерии — про них всё, что ниже.</p>
+  </section>
+
+  <!-- TICS -->
+  <section id="tics">
+    <div class="sec-num">02</div>
+    <h2>Шесть тиков, которые выдают русский ИИ-текст</h2>
+    <p class="sub">Это то, что редактор замечает без всякого детектора. Откройте свой последний сгенерированный текст и пройдитесь по списку — нажмите на пункт, чтобы увидеть пример «было → стало» на нашем материале.</p>
+
+    <div class="tics">
+      <div class="tic">
+        <div class="tic-head"><span class="n">1</span><span class="t">Тире где попало</span><span class="chev">▼</span></div>
+        <div class="tic-body"><div><div class="tic-inner">
+          <p style="font-size:15px">Модель ставит тире чуть ли не в каждом предложении — там, где по правилам нужна запятая или двоеточие. Ей кажется, что так «энергичнее».</p>
+          <div class="ba">
+            <div class="box bad"><div class="lbl"><span class="dot"></span>Нейро</div><span>«Мы внедряем ИИ — это не просто тренд — это новый стандарт — который меняет всё».</span></div>
+            <div class="box good"><div class="lbl"><span class="dot"></span>Человек</div><span>«Мы внедряем ИИ. Это уже не тренд, а рабочий стандарт».</span></div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <div class="tic">
+        <div class="tic-head"><span class="n">2</span><span class="t">Конструкция «это не A, а Б»</span><span class="chev">▼</span></div>
+        <div class="tic-body"><div><div class="tic-inner">
+          <p style="font-size:15px">«Это не просто…, а целое…», «не только…, но и…». Любимый оборот, который лезет почти в каждый абзац.</p>
+          <div class="ba">
+            <div class="box bad"><div class="lbl"><span class="dot"></span>Нейро</div><span>«Это не просто инструмент, а целая экосистема для роста сотрудника».</span></div>
+            <div class="box good"><div class="lbl"><span class="dot"></span>Человек</div><span>«Это инструмент, который снимает рутину».</span></div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <div class="tic">
+        <div class="tic-head"><span class="n">3</span><span class="t">Раздувание значимости</span><span class="chev">▼</span></div>
+        <div class="tic-body"><div><div class="tic-inner">
+          <p style="font-size:15px">Обычный факт превращается в «поворотный момент» и «краеугольный камень». Спокойнее.</p>
+          <div class="ba">
+            <div class="box bad"><div class="lbl"><span class="dot"></span>Нейро</div><span>«Запуск канала ознаменовал поворотный момент в цифровой эволюции компании».</span></div>
+            <div class="box good"><div class="lbl"><span class="dot"></span>Человек</div><span>«Мы запустили канал, чтобы делиться рабочими приёмами».</span></div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <div class="tic">
+        <div class="tic-head"><span class="n">4</span><span class="t">Причастные хвосты «для солидности»</span><span class="chev">▼</span></div>
+        <div class="tic-body"><div><div class="tic-inner">
+          <p style="font-size:15px">Цепочка «…повышая…, оптимизируя…, формируя…» в конце предложения имитирует глубину, но ничего не добавляет.</p>
+          <div class="ba">
+            <div class="box bad"><div class="lbl"><span class="dot"></span>Нейро</div><span>«Лаборатория внедряет решения, повышая эффективность, оптимизируя процессы и формируя культуру».</span></div>
+            <div class="box good"><div class="lbl"><span class="dot"></span>Человек</div><span>«Лаборатория внедряет решения. Процессы идут быстрее, рутины меньше».</span></div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <div class="tic">
+        <div class="tic-head"><span class="n">5</span><span class="t">Перечисления тройками</span><span class="chev">▼</span></div>
+        <div class="tic-body"><div><div class="tic-inner">
+          <p style="font-size:15px">Модель почти всегда собирает эпитеты и пункты в группы по три. Если видите три подряд — почти наверняка перед вами ИИ.</p>
+          <div class="ba">
+            <div class="box bad"><div class="lbl"><span class="dot"></span>Нейро</div><span>«Быстро, удобно и эффективно — для каждого сотрудника, каждой команды, каждого отдела».</span></div>
+            <div class="box good"><div class="lbl"><span class="dot"></span>Человек</div><span>«Быстро. И без лишней возни».</span></div>
+          </div>
+        </div></div></div>
+      </div>
+
+      <div class="tic">
+        <div class="tic-head"><span class="n">6</span><span class="t">Однотонный ритм</span><span class="chev">▼</span></div>
+        <div class="tic-body"><div><div class="tic-inner">
+          <p style="font-size:15px">Либо всё рублено и одинаково коротко, либо все предложения по одному шаблону. Живой текст дышит: короткая фраза, потом длинная.</p>
+          <div class="ba">
+            <div class="box bad"><div class="lbl"><span class="dot"></span>Нейро</div><span>«ИИ помогает писать. ИИ помогает считать. ИИ помогает планировать».</span></div>
+            <div class="box good"><div class="lbl"><span class="dot"></span>Человек</div><span>«ИИ берёт на себя черновую работу — от писанины до расчётов. А решения остаются за вами».</span></div>
+          </div>
+        </div></div></div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <h4>Стоп-слова: если встретили — почти всегда лишнее</h4>
+      <div class="chips">
+        <span class="chip"><s>важно отметить</s></span>
+        <span class="chip"><s>стоит учитывать</s></span>
+        <span class="chip"><s>в современном мире</s></span>
+        <span class="chip"><s>таким образом</s></span>
+        <span class="chip"><s>в целом</s></span>
+        <span class="chip"><s>играет ключевую роль</s></span>
+        <span class="chip"><s>краеугольный камень</s></span>
+        <span class="chip"><s>поворотный момент</s></span>
+        <span class="chip"><s>может похвастаться</s></span>
+        <span class="chip"><s>погрузимся</s></span>
+        <span class="chip"><s>раскрыть потенциал</s></span>
+        <span class="chip"><s>комплексный подход</s></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOST -->
+  <section id="boost">
+    <div class="sec-num">03</div>
+    <h2>35 усилителей для генерации с нуля</h2>
+    <p class="sub">Это команды для самой генерации: они задают модели характер ещё на входе, до первого слова. Не пытайтесь применить всё разом — берите два-три под конкретную задачу. Разделы раскрываются по нажатию.</p>
+
+    <div class="acc">
+      <div class="grp">
+        <div class="grp-head"><span class="gi">I</span><span class="gt">Оригинальность</span><span class="gc">7 приёмов</span><span class="chev">▼</span></div>
+        <div class="grp-body"><div><ul>
+          <li>Пиши не из учебника, а из цеха.</li>
+          <li>Запрети первые очевидные решения, начни с третьего слоя ассоциаций.</li>
+          <li>Придумай решение, которое нельзя получить простой обработкой брифа.</li>
+          <li>Пусть у идеи будет собственный закон мира: свои правила, роли, язык.</li>
+          <li>Удали всё, что могло бы жить в любом другом тексте. Оставь то, что принадлежит этой теме и этой ситуации.</li>
+          <li>Замени общие метафоры на точные и предметные.</li>
+          <li>Пусть каждая фраза звучит так, будто её выстрадали, а не сгенерировали.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-head"><span class="gi">II</span><span class="gt">Живой стиль вместо стерильного</span><span class="gc">7 приёмов</span><span class="chev">▼</span></div>
+        <div class="grp-body"><div><ul>
+          <li>Сделай текст нервным, точным и авторским.</li>
+          <li>Убери водянистую вежливость, оставь уважение и силу.</li>
+          <li>Проверь на фальшивую глубину: всё туманное замени ясным.</li>
+          <li>Опиши явление через физическое ощущение — вес, температуру, звук.</li>
+          <li>Преврати абстрактную идею в предмет на столе.</li>
+          <li>Сделай визуальным, но без перегруза описаниями.</li>
+          <li>Пиши так, будто каждое предложение прошло через внутреннего редактора с ножом.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-head"><span class="gi">III</span><span class="gt">Драматургия: текст ведёт за собой</span><span class="gc">8 приёмов</span><span class="chev">▼</span></div>
+        <div class="grp-body"><div><ul>
+          <li>В каждом блоке добавь маленькое напряжение: что может пойти не так.</li>
+          <li>Вставь один неожиданный поворот, который меняет взгляд на тему.</li>
+          <li>Убери линейность: пусть текст раскрывается, а не пересказывается.</li>
+          <li>Каждый следующий абзац должен добавлять давление.</li>
+          <li>У каждой идеи — фраза-крючок.</li>
+          <li>Дай внутренний ритм: короткая фраза, разворот, удар.</li>
+          <li>Убери безопасные варианты, оставь те, где есть риск и характер.</li>
+          <li>Заверши так, чтобы захотелось действовать, а не просто согласиться.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-head"><span class="gi">IV</span><span class="gt">Антинейросетевые — самые рабочие</span><span class="gc">5 приёмов</span><span class="chev">▼</span></div>
+        <div class="grp-body"><div><ul>
+          <li>Перепиши так, чтобы текст нельзя было перепутать с ответом нейросети.</li>
+          <li>Удали гладкость, добавь сопротивление, фактуру и человеческий след.</li>
+          <li>Выкинь фразы-подушки: «важно отметить», «стоит учитывать», «в современном мире», «таким образом».</li>
+          <li>Сломай симметрию: одинаковые абзацы, ровные списки, предсказуемые тройки, слишком аккуратные переходы.</li>
+          <li>Убери стерильность, добавь наблюдения, которые заметил бы только внимательный человек.</li>
+        </ul></div></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-head"><span class="gi">V</span><span class="gt">Экспертиза и авторская позиция</span><span class="gc">5 приёмов</span><span class="chev">▼</span></div>
+        <div class="grp-body"><div><ul>
+          <li>Добавь авторскую позицию, но без назидания.</li>
+          <li>Не перечисляй варианты — выбери лучший и защити выбор.</li>
+          <li>Удали штампы: если фраза могла быть в тысяче текстов, замени её.</li>
+          <li>Не усиливай прилагательными — усиливай точностью.</li>
+          <li>Избегай декоративной экспертности: «эффективная стратегия», «ключевой фактор», «ценный инструмент».</li>
+        </ul></div></div>
+      </div>
+
+      <div class="grp">
+        <div class="grp-head"><span class="gi">VI</span><span class="gt">Конкретика и польза для читателя</span><span class="gc">3 приёма</span><span class="chev">▼</span></div>
+        <div class="grp-body"><div><ul>
+          <li>Переведи каждый аргумент в язык денег, времени, статуса или спокойствия.</li>
+          <li>Сделай так, чтобы читатель почувствовал: «это про меня».</li>
+          <li>Объясни так, чтобы новичок понял, а профессионал не заскучал.</li>
+        </ul></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORRECTOR -->
+  <section id="corrector">
+    <div class="sec-num">04</div>
+    <h2>Промпт-корректор</h2>
+    <p class="sub">Скопируйте один раз и держите под рукой. Он не сочиняет за вас. Он чистит уже готовый текст по конкретным критериям и показывает, что поменял. Главное правило: смысл и факты остаются нетронутыми.</p>
+
+    <div class="promptcard">
+      <div class="ph">
+        <span>Готов к вставке</span>
+        <button class="copybtn" data-copy="corrector"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Копировать</button>
+      </div>
+      <pre id="corrector"><b>Роль:</b> ты придирчивый редактор. Вычищаешь из текста «запах нейросети», но не трогаешь смысл и факты.
+
+Пройдись по тексту и для каждого найденного маркера перепиши проблемное место.
+
+<b>Маркеры, которые надо убрать:</b>
+1. Тире вместо запятых и двоеточий — верни нормальную пунктуацию.
+2. Обороты «это не A, а Б» и «не только…, но и…» — оставь прямое утверждение.
+3. Раздувание значимости: «поворотный момент», «краеугольный камень», «играет ключевую роль» — оставь то, что есть по факту.
+4. Причастные хвосты «повышая…, оптимизируя…, формируя…» — разбей на простые предложения или убери.
+5. Тройки (три эпитета или три пункта подряд) — оставь один точный или сломай ритм.
+6. Фразы-подушки: «важно отметить», «стоит учитывать», «в современном мире», «таким образом», «погрузимся», «раскрыть потенциал».
+7. Однотонный ритм — чередуй короткие и длинные предложения.
+
+<b>Правила:</b>
+— Смысл, факты и цифры не меняй.
+— Мои авторские обороты, если они не из списка, сохрани.
+— По каждой правке покажи короткой строкой: было → стало.
+
+Текст: «[вставить]»</pre>
+    </div>
+  </section>
+
+  <!-- BANK -->
+  <section id="bank">
+    <div class="sec-num">05</div>
+    <h2>Банк фраз-вставок</h2>
+    <p class="sub">Если не хочется копировать большой корректор — добавьте одну-две строки прямо в свой запрос. Кнопка справа копирует фразу.</p>
+
+    <div class="bank">
+      <div class="bgrp">
+        <h4>Против штампов и пафоса</h4>
+        <div class="phrase"><p>Без рекламной лексики и пафоса. Пиши как есть, без раздувания значимости.</p><button class="mini" data-phrase></button></div>
+        <div class="phrase"><p>Запрещённые слова: важно отметить, стоит учитывать, в современном мире, таким образом, погрузимся, раскрыть потенциал.</p><button class="mini" data-phrase></button></div>
+      </div>
+      <div class="bgrp">
+        <h4>За живость и ритм</h4>
+        <div class="phrase"><p>Чередуй короткие и длинные предложения. Можно начинать с «и» или «но».</p><button class="mini" data-phrase></button></div>
+        <div class="phrase"><p>Пиши, как говоришь вслух коллеге, а не как пишешь в отчёт.</p><button class="mini" data-phrase></button></div>
+      </div>
+      <div class="bgrp">
+        <h4>За конкретику</h4>
+        <div class="phrase"><p>Не усиливай прилагательными — усиливай фактами: цифры, сроки, что именно произошло.</p><button class="mini" data-phrase></button></div>
+        <div class="phrase"><p>Замени общие метафоры на предметные: вес, температуру, звук.</p><button class="mini" data-phrase></button></div>
+      </div>
+      <div class="bgrp">
+        <h4>За позицию и за чистую пунктуацию</h4>
+        <div class="phrase"><p>Не перечисляй варианты — выбери один и обоснуй. Можно с авторским мнением.</p><button class="mini" data-phrase></button></div>
+        <div class="phrase"><p>Тире ставь только по правилам. Где можно — запятая или двоеточие.</p><button class="mini" data-phrase></button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AVOID -->
+  <section id="avoid">
+    <div class="sec-num">06</div>
+    <h2>Чего делать не стоит</h2>
+    <p class="sub">Большинство советов из выдачи «обойти детектор» только портят текст. Вот что точно не работает.</p>
+    <div class="avoid">
+      <div class="row"><span class="x">✕</span><p><strong>Сервисы-«гуманайзеры».</strong> undetectable.ai, Smodin и им подобные заточены под обход детекторов, а не под читателя. Они ломают структуру и выдают мешанину, которую тяжело читать.</p></div>
+      <div class="row"><span class="x">✕</span><p><strong>Промпт «сделай нормально / по-человечески».</strong> Модель не знает, что для вас «нормально», и начинает гадать — обычно в сторону ещё большего нейрослога. Нужны конкретные критерии.</p></div>
+      <div class="row"><span class="x">✕</span><p><strong>Жёсткий лимит объёма на старте.</strong> «Не больше 2000 знаков» заставляет модель резать смысл в пользу шаблонов. Сначала пусть напишет нормально, сокращайте потом.</p></div>
+      <div class="row"><span class="x">✕</span><p><strong>«Поклянись, что не будешь использовать клише».</strong> Модель послушно обещает и через пять предложений снова ставит три тире в абзаце. Помогают только критерии и правки в несколько проходов.</p></div>
+    </div>
+  </section>
+
+  <!-- LINKS -->
+  <section id="links">
+    <div class="sec-num">07</div>
+    <h2>Что почитать дальше</h2>
+    <p class="sub">Источники, на которые опирается этот справочник, — для тех, кто хочет копнуть глубже.</p>
+    <div class="links">
+      <a href="https://sdelaem.agency/blog/kak-ubrat-nejroslog-iz-teksta-rabochie-metody-i-to-chto-ne-pomogaet/" target="_blank" rel="noopener">
+        <div class="src">Сделаем · блог</div>
+        <div class="ti">Как убрать нейрослог из текста</div>
+        <div class="ds">Разбор русскоязычных маркеров и логики промпта-корректора. Основа этого справочника.</div>
+        <div class="go">Открыть →</div>
+      </a>
+      <a href="https://ru.wikipedia.org/wiki/Википедия:Признаки_сгенерированности_текста" target="_blank" rel="noopener">
+        <div class="src">Википедия</div>
+        <div class="ti">Признаки сгенерированности текста</div>
+        <div class="ds">Подробный каталог слов-маркеров и приёмов, по которым редакторы вычисляют генерацию.</div>
+        <div class="go">Открыть →</div>
+      </a>
+      <a href="https://gramota.ru/journal/stati/tekhnologii/chem-sgenerirovannye-teksty-vydayut-sebya" target="_blank" rel="noopener">
+        <div class="src">Грамота.ру</div>
+        <div class="ti">Чем сгенерированные тексты выдают себя</div>
+        <div class="ds">Почему у модели «низкая энтропия» и как это проявляется в стиле.</div>
+        <div class="go">Открыть →</div>
+      </a>
+      <a href="https://skillbox.ru/media/code/kak-raspoznat-tekst-napisannyy-neyrosetyu/" target="_blank" rel="noopener">
+        <div class="src">Skillbox Media</div>
+        <div class="ti">Как распознать текст нейросети</div>
+        <div class="ds">У каждой модели свой набор штампов — обзор отличий и инструментов проверки.</div>
+        <div class="go">Открыть →</div>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="cta">
+    <span class="cmark" aria-hidden="true">
+      <svg viewBox="0 0 7498.36 9155.2" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M571.69 7747.08l6350.92 0 575.75 1408.12 -7498.36 0 571.69 -1408.12zm3947.71 -7747.08l-1556.98 0 -2088.76 5108.86 1532.49 0 1340.02 -3276.97 1334.78 3276.97 1528.08 0 -2089.63 -5108.86z"/></svg>
+    </span>
+    <h3>Попробуйте на своём тексте — и расскажите в канале</h3>
+    <p>Прогоните любой свой пост или письмо через промпт-корректор. Какой приём сработал лучше всего? Делитесь в комментариях канала «ИИ. Будущее сегодня».</p>
+    <div class="sig">Лаборатория ИИ-решений · ГК РАЗУМ</div>
+  </div>
+  <div class="foot-note">Технологии берут на себя рутину. Решения остаются за человеком.</div>
+</footer>
+
+<script>
+  // progress bar
+  const prog=document.getElementById('progress');
+  const onScroll=()=>{const h=document.documentElement;const sc=h.scrollTop;const max=h.scrollHeight-h.clientHeight;prog.style.width=(max>0?sc/max*100:0)+'%';};
+  document.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+  // tics accordion
+  document.querySelectorAll('.tic-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
+  document.querySelector('.tic')?.classList.add('open');
+
+  // groups accordion
+  document.querySelectorAll('.grp-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('open')));
+  document.querySelector('.grp')?.classList.add('open');
+
+  // copy prompt
+  document.querySelectorAll('.copybtn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=document.getElementById(btn.dataset.copy).innerText;
+      navigator.clipboard.writeText(t).then(()=>{
+        const old=btn.innerHTML;btn.classList.add('done');btn.innerHTML='✓ Скопировано';
+        setTimeout(()=>{btn.classList.remove('done');btn.innerHTML=old;},1800);
+      });
+    });
+  });
+
+  // copy phrase
+  const icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  document.querySelectorAll('.mini').forEach(b=>{
+    b.innerHTML=icon;
+    b.addEventListener('click',()=>{
+      const txt=b.previousElementSibling.innerText;
+      navigator.clipboard.writeText(txt).then(()=>{
+        b.classList.add('done');b.innerHTML='✓';
+        setTimeout(()=>{b.classList.remove('done');b.innerHTML=icon;},1500);
+      });
+    });
+  });
+
+  // active nav on scroll
+  const links=[...document.querySelectorAll('nav.toc a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){const id='#'+e.target.id;links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')===id));}});
+  },{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(s=>s&&io.observe(s));
+</script>
+</body>
+</html>
