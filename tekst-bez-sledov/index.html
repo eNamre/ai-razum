@@ -182,12 +182,36 @@
   footer{padding:56px 0 70px;text-align:center}
   .cta{background:var(--ink);border-radius:var(--radius);padding:42px 30px;box-shadow:var(--shadow);position:relative;overflow:hidden}
   .cta::after{content:"";position:absolute;inset:0;background:radial-gradient(600px 280px at 82% -30%, rgba(64,185,121,.22), transparent 60%);pointer-events:none}
-  .cta .cmark{width:30px;height:auto;margin:0 auto 18px;color:#fff;position:relative}
+  .cta .cmark{display:block;width:30px;height:auto;margin:0 auto 18px;color:#fff;position:relative}
   .cta .cmark svg{display:block;width:100%;height:auto}
   .cta h3{font-weight:700;color:#fff;font-size:clamp(21px,3.2vw,28px);line-height:1.2;margin-bottom:12px;position:relative}
   .cta p{color:rgba(255,255,255,.80);max-width:50ch;margin:0 auto 8px;position:relative;font-weight:500}
   .cta .sig{margin-top:22px;color:var(--green-light);font-size:14px;letter-spacing:.03em;font-weight:600;position:relative}
   .foot-note{margin-top:26px;color:var(--ink-mute);font-size:13px;letter-spacing:.02em;font-weight:500}
+
+  /* ---------- mobile ---------- */
+  @media(max-width:600px){
+    body{font-size:16px}
+    .wrap{padding:0 16px}
+    .topbar{flex-wrap:wrap;gap:6px 12px;padding-top:18px}
+    .topbar .tag{flex-basis:100%;order:3}
+    .brand .bn{font-size:14px}
+    header.hero{padding:36px 0 32px}
+    h1{margin-top:16px}
+    .lede{margin-top:18px}
+    .meta-row{margin-top:22px}
+    section{padding:40px 0}
+    nav.toc .wrap{gap:4px;padding-top:10px;padding-bottom:10px}
+    nav.toc a{font-size:12.5px;padding:6px 11px}
+    .tic-head,.grp-head{padding:16px 16px}
+    .tic-inner{padding:0 16px 18px}
+    .grp ul{padding:4px 16px 18px}
+    .stop,.bgrp,.avoid .row,.links a{padding-left:16px;padding-right:16px}
+    .promptcard pre{font-size:13.5px;padding:18px 16px}
+    .promptcard .ph{padding:14px 16px}
+    .cta{padding:34px 20px}
+    footer{padding:44px 0 60px}
+  }
 
   @keyframes fade{from{opacity:0}to{opacity:1}}
   @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
@@ -535,7 +559,7 @@
     </span>
     <h3>Попробуйте на своём тексте — и расскажите в канале</h3>
     <p>Прогоните любой свой пост или письмо через промпт-корректор. Какой приём сработал лучше всего? Делитесь в комментариях канала «ИИ. Будущее сегодня».</p>
-    <div class="sig">Лаборатория ИИ-решений · ГК РАЗУМ</div>
+    <div class="sig">Лаборатория ИИ-решений · ДК РАЗУМ</div>
   </div>
   <div class="foot-note">Технологии берут на себя рутину. Решения остаются за человеком.</div>
 </footer>
@@ -566,24 +590,4 @@
   });
 
   // copy phrase
-  const icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-  document.querySelectorAll('.mini').forEach(b=>{
-    b.innerHTML=icon;
-    b.addEventListener('click',()=>{
-      const txt=b.previousElementSibling.innerText;
-      navigator.clipboard.writeText(txt).then(()=>{
-        b.classList.add('done');b.innerHTML='✓';
-        setTimeout(()=>{b.classList.remove('done');b.innerHTML=icon;},1500);
-      });
-    });
-  });
-
-  // active nav on scroll
-  const links=[...document.querySelectorAll('nav.toc a')];
-  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
-  const io=new IntersectionObserver(es=>{
-    es.forEach(e=>{if(e.isIntersecting){const id='#'+e.target.id;links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')===id));}});
-  },{rootMargin:'-45% 0px -50% 0px'});
-  secs.forEach(s=>s&&io.observe(s));
-</script>
-</b
+  const icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="
