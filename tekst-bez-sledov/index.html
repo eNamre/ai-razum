@@ -590,4 +590,25 @@
   });
 
   // copy phrase
-  const icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 
+  const icon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  document.querySelectorAll('.mini').forEach(b=>{
+    b.innerHTML=icon;
+    b.addEventListener('click',()=>{
+      const txt=b.previousElementSibling.innerText;
+      navigator.clipboard.writeText(txt).then(()=>{
+        b.classList.add('done');b.innerHTML='✓';
+        setTimeout(()=>{b.classList.remove('done');b.innerHTML=icon;},1500);
+      });
+    });
+  });
+
+  // active nav on scroll
+  const links=[...document.querySelectorAll('nav.toc a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){const id='#'+e.target.id;links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')===id));}});
+  },{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(s=>s&&io.observe(s));
+</script>
+</body>
+</html>
